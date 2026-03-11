@@ -73,12 +73,11 @@ def trigger_value_error(request):
 @permission_classes([AllowAny])
 def trigger_key_error(request):
     """
-    Raises KeyError — caught automatically by AutofixMiddleware.
-
-    Common scenario: accessing a dict key that doesn't exist.
+    Demo endpoint — uses .get() with a default value to safely access
+    a dict key that might not exist.
     """
     config = {'database': 'postgres', 'host': 'localhost'}
-    port = config['port']  # KeyError: 'port'
+    port = config.get('port', 5432)  # Safe access with default value
     return Response({'port': port})
 
 
