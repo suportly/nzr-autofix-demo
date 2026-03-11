@@ -111,62 +111,91 @@ captureException(new Error('Modal crashed'))`,
       title: 'ValueError',
       description: 'Calls a backend endpoint that parses invalid input. AutofixMiddleware captures the exception.',
       sdkFeature: 'AutofixMiddleware (Django)',
-      codeSnippet: `# Django view:
+      codeSnippet: `# backend/demo/views.py — lines 61-69
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def trigger_value_error(request):
     user_input = "not-a-number"
-    age = int(user_input)  # ValueError`,
+    age = int(user_input)  # ValueError
+    return Response({'age': age})`,
       onTrigger: () => apiClient.get('/api/demo/errors/value-error/'),
     },
     {
       title: 'KeyError',
       description: 'Calls a backend endpoint that accesses a missing dict key.',
       sdkFeature: 'AutofixMiddleware (Django)',
-      codeSnippet: `# Django view:
+      codeSnippet: `# backend/demo/views.py — lines 74-82
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def trigger_key_error(request):
-    config = {'host': 'localhost'}
-    port = config['port']  # KeyError`,
+    config = {'database': 'postgres', 'host': 'localhost'}
+    port = config['port']  # KeyError: 'port'
+    return Response({'port': port})`,
       onTrigger: () => apiClient.get('/api/demo/errors/key-error/'),
     },
     {
       title: 'TypeError',
       description: 'Calls a backend endpoint that operates on incompatible types (None + int).',
       sdkFeature: 'AutofixMiddleware (Django)',
-      codeSnippet: `# Django view:
+      codeSnippet: `# backend/demo/views.py — lines 87-95
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def trigger_type_error(request):
     count = None
-    total = count + 1  # TypeError`,
+    total = count + 1  # TypeError
+    return Response({'total': total})`,
       onTrigger: () => apiClient.get('/api/demo/errors/type-error/'),
     },
     {
       title: 'ZeroDivisionError',
       description: 'Calls a backend endpoint that divides by zero.',
       sdkFeature: 'AutofixMiddleware (Django)',
-      codeSnippet: `# Django view:
+      codeSnippet: `# backend/demo/views.py — lines 100-109
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def trigger_zero_division(request):
-    items_per_page = 100 / 0  # ZeroDivisionError`,
+    total_items = 100
+    num_pages = 0
+    items_per_page = total_items / num_pages  # ZeroDivisionError
+    return Response({'items_per_page': items_per_page})`,
       onTrigger: () => apiClient.get('/api/demo/errors/zero-division/'),
     },
     {
       title: 'Manual capture_exception()',
       description: 'Backend catches the error gracefully and reports it via capture_exception(). Returns 200.',
       sdkFeature: 'nzr_autofix.capture_exception()',
-      codeSnippet: `# Django view:
-try:
-    total = float('19.99') * int('abc')
-except Exception as exc:
-    nzr_autofix.capture_exception(exc)
-    return Response({'status': 'error_captured'})`,
+      codeSnippet: `# backend/demo/views.py — lines 148-168
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def manual_capture_exception(request):
+    try:
+        data = {'price': '19.99', 'quantity': 'abc'}
+        total = float(data['price']) * int(data['quantity'])
+    except Exception as exc:
+        event_id = nzr_autofix.capture_exception(exc)
+        return Response({
+            'status': 'error_captured',
+            'event_id': event_id,
+        })`,
       onTrigger: () => apiClient.post('/api/demo/errors/manual-capture/'),
     },
     {
       title: 'Manual capture_message()',
       description: 'Backend sends a custom warning message without an exception.',
       sdkFeature: 'nzr_autofix.capture_message()',
-      codeSnippet: `# Django view:
-nzr_autofix.capture_message(
-    message='[Demo] Custom warning',
-    level='warning',
-)`,
+      codeSnippet: `# backend/demo/views.py — lines 173-194
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def manual_capture_message(request):
+    message = request.data.get('message', 'Demo warning')
+    event_id = nzr_autofix.capture_message(
+        message=f'[Demo] {message}',
+        level='warning',
+    )
+    return Response({
+        'status': 'message_captured',
+        'event_id': event_id,
+    })`,
       onTrigger: () => apiClient.post('/api/demo/errors/manual-message/', { message: 'Custom backend warning' }),
     },
   ]
