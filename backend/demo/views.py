@@ -56,16 +56,27 @@ def fake_login(request):
 # them and sends to NZR Autofix. No manual code needed!
 # =============================================================
 
+def _safe_parse_int(value, default=0):
+    """
+    Safely parse a string to int, returning default if conversion fails.
+    """
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def trigger_value_error(request):
     """
-    Raises ValueError — caught automatically by AutofixMiddleware.
+    Demonstrates safe parsing of user input with validation.
 
     Common scenario: parsing user input without proper validation.
+    Now uses a safe parsing helper to avoid ValueError.
     """
     user_input = "not-a-number"
-    age = int(user_input)  # ValueError: invalid literal for int() with base 10
+    age = _safe_parse_int(user_input, default=0)
     return Response({'age': age})
 
 
