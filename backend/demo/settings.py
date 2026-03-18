@@ -60,10 +60,8 @@ DATABASES = {}
 import nzr_autofix
 
 nzr_autofix.init(
-    # DSN and endpoint_url are read from env vars automatically.
-    # You can also pass them explicitly:
-    # dsn='nzr://your-token@autofix/your-project-id',
-    # endpoint_url='https://your-instance.com/api/v1/autofix/ingest/',
+    dsn=os.environ.get('NZR_AUTOFIX_DSN', ''),
+    endpoint_url=os.environ.get('NZR_AUTOFIX_ENDPOINT_URL', ''),
     environment=os.environ.get('NZR_AUTOFIX_ENVIRONMENT', 'demo'),
     release='1.0.0-demo',
 )
